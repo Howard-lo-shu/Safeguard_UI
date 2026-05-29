@@ -17,23 +17,41 @@
   @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
   @keyframes slideDown{from{max-height:0;opacity:0}to{max-height:500px;opacity:1}}
   @keyframes lobsterBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+  @keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
   ::-webkit-scrollbar{width:3px}
   ::-webkit-scrollbar-track{background:#edf1f5}
   ::-webkit-scrollbar-thumb{background:#c0cad8;border-radius:4px}
   button{font-family:inherit;cursor:pointer;transition:all .15s}
   button:hover{filter:brightness(1.1)}
   button:active{transform:scale(.97)}
-  .feed-btn{background:transparent;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:600;text-transform:uppercase;font-family:'JetBrains Mono',monospace;letter-spacing:.5px;transition:all .15s}
+  .feed-btn{background:transparent;border-radius:6px;padding:6px 16px;font-size:13px;font-weight:600;text-transform:uppercase;font-family:'JetBrains Mono',monospace;letter-spacing:.5px;transition:all .15s}
   .feed-btn:hover{filter:brightness(1.15)}
-  .stat-card{flex:1;background:#edf1f5;border-radius:10px;padding:12px 6px;text-align:center;transition:all .15s}
+  .stat-card{flex:1;background:#edf1f5;border-radius:10px;padding:14px 8px;text-align:center;transition:all .15s}
   .stat-card.clickable:hover{border-color:rgba(200,144,32,.3)!important}
-  .source-item{background:#edf1f5;border-radius:8px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center;border:1px solid #d4dbe4;font-size:13px}
-  .badge{padding:2px 7px;border-radius:6px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
-  .chat-msg{max-width:85%;padding:8px 12px;border-radius:10px;font-size:14px;line-height:1.5}
-  .log-row{display:flex;gap:12px;align-items:center;padding:5px 10px;border-radius:6px;font-size:12px;font-family:'JetBrains Mono',monospace}
+  .source-item{background:#edf1f5;border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;border:1px solid #d4dbe4;font-size:14px}
+  .badge{padding:3px 8px;border-radius:6px;font-size:12px;font-weight:600;font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
+  .chat-msg{max-width:85%;padding:10px 14px;border-radius:10px;font-size:15px;line-height:1.5}
+  .log-row{display:flex;gap:12px;align-items:center;padding:6px 12px;border-radius:6px;font-size:13px;font-family:'JetBrains Mono',monospace}
   .pending-card{background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #d4dbe4;animation:fadeIn .2s ease both}
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:100;animation:fadeIn .15s}
   .modal-box{background:#fff;border:1px solid #d4dbe4;border-radius:16px;padding:32px 40px;width:420px;box-shadow:0 24px 64px rgba(0,0,0,.18)}
+  .section-label{font-size:15px;font-weight:600;color:#1a2a3a;display:flex;align-items:center;gap:8px;letter-spacing:.3px}
+  .sb-stat{flex:1;background:#fff;border-radius:10px;padding:16px 8px;text-align:center;border:1px solid #d4dbe4}
+  .sb-stat-num{font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1.2}
+  .sb-stat-label{font-size:11px;color:#8a96a6;margin-top:4px;text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+  .wl-sublabel{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a96a6;font-weight:600;margin-bottom:5px}
+  .wl-select{flex:1;background:#edf1f5;border:1px solid #d4dbe4;border-radius:6px;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#2a3a4a;outline:none;min-width:0}
+  .wl-select:focus{border-color:#2a6dd6}
+  .btn-sm{border:none;border-radius:6px;padding:7px 16px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer}
+  .btn-icon-sm{width:30px;height:30px;border-radius:6px;border:1px solid #d4dbe4;background:#fff;color:#8a96a6;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;flex-shrink:0}
+  .demo-btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;font-family:'JetBrains Mono',monospace;letter-spacing:.3px;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .15s}
+  .demo-btn:hover{filter:brightness(1.15)}
+  .term-line{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;color:#5a6a7a}
+  .term-line .ok{color:#2a9d5c}
+  .term-line .warn{color:#c89020}
+  .term-line .cmd{color:#2a6dd6}
+  .term-line .info{color:#2a6dd6}
+  .term-cursor{display:inline-block;width:7px;height:14px;background:#2a6dd6;vertical-align:text-bottom;animation:cursorBlink 1s step-end infinite}
 </style>
 </head>
 <body>
@@ -43,13 +61,9 @@
   <!-- ═══ HEADER ═══ -->
   <header style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px;background:#f6f8fa;border-radius:12px;border:1px solid #d4dbe4;flex-shrink:0">
     <div style="display:flex;align-items:center;gap:14px">
-      <img src="/static/images/aisafeguard-logo.png" style="height:28px" alt="AiSafeguard"/>
-      <div style="width:1px;height:28px;background:#d4dbe4"></div>
       <img src="/static/images/asrock-logo.png" style="height:40px;opacity:.9" alt="ASRock Industrial"/>
-      <div style="font-size:12px;color:#8a96a6;font-weight:500">×</div>
+      <div style="font-size:14px;color:#8a96a6;font-weight:500">·</div>
       <img src="/static/images/exein-logo.png" style="height:18px;opacity:.85;filter:invert(1)" alt="Exein"/>
-      <div style="width:1px;height:28px;background:#d4dbe4"></div>
-      <span style="font-size:12px;color:#8a96a6;letter-spacing:.5px;font-weight:500">CONTROL CENTER</span>
     </div>
     <div style="display:flex;align-items:center;gap:16px">
       <div id="feed-buttons" style="display:flex;gap:6px"></div>
@@ -59,7 +73,7 @@
       </label>
       <div style="display:flex;align-items:center;gap:6px">
         <div style="width:6px;height:6px;border-radius:50%;background:#2a9d5c;animation:blipPulse 2s infinite"></div>
-        <span style="font-size:13px;color:#5a6a7a">System Online</span>
+        <span style="font-size:14px;color:#5a6a7a">System Online</span>
       </div>
     </div>
   </header>
@@ -67,51 +81,115 @@
   <!-- ═══ MAIN ═══ -->
   <div style="flex:1;display:flex;gap:12px;min-height:0">
 
-    <!-- LEFT — Live Monitoring -->
-    <div id="sidePanel" style="width:252px;min-width:200px;flex:1 1 0;background:#f6f8fa;border-radius:14px;border:1px solid #d4dbe4;padding:18px;display:flex;flex-direction:column;gap:18px;flex-shrink:0;overflow-y:auto">
-      <div style="display:flex;align-items:center;gap:8px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6dd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-        <span style="font-size:15px;font-weight:600;color:#1a2a3a;letter-spacing:.3px">Live Monitoring</span>
+    <!-- LEFT PANEL -->
+    <div id="sidePanel" style="width:400px;min-width:320px;flex-shrink:0;background:#f6f8fa;border-radius:14px;border:1px solid #d4dbe4;padding:22px;display:flex;flex-direction:column;gap:16px;overflow-y:auto">
+
+      <!-- AiSafeguard Branding -->
+      <div style="display:flex;align-items:center;gap:10px">
+        <img src="/static/images/aisafeguard-logo.png" style="height:28px" alt="AiSafeguard"/>
+        <span style="font-size:14px;color:#8a96a6;letter-spacing:.5px;font-weight:500">CONTROL CENTER</span>
       </div>
-      <!-- Stats -->
+
+      <!-- Sandbox Monitoring -->
+      <div class="section-label">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2a6dd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Sandbox Monitoring
+      </div>
+      <div id="sandboxStatsRow" style="display:flex;gap:8px">
+        <div class="sb-stat"><div class="sb-stat-num" style="color:#b87a10" id="sbHoneypot">2</div><div class="sb-stat-label">Honeypot</div></div>
+        <div class="sb-stat"><div class="sb-stat-num" style="color:#2a9d5c" id="sbTrusted">1</div><div class="sb-stat-label">Trusted</div></div>
+        <div class="sb-stat"><div class="sb-stat-num" style="color:#2a6dd6" id="sbTotal">3</div><div class="sb-stat-label">Total</div></div>
+      </div>
+
+      <!-- Live Monitoring -->
+      <div class="section-label" style="margin-top:4px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2a6dd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Live Monitoring
+      </div>
       <div id="statsRow" style="display:flex;gap:8px"></div>
+
       <div style="height:1px;background:#d4dbe4"></div>
-      <!-- Source groups -->
-      <div id="sourceGroups"></div>
+
+      <!-- Whitelist -->
+      <div class="section-label">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2a6dd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg>
+        Whitelist
+      </div>
+      <div>
+        <div class="wl-sublabel">Add Device</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <select class="wl-select" id="wlAddSelect">
+            <option value="">Select device...</option>
+          </select>
+          <button class="btn-icon-sm" title="Refresh" onclick="refreshDevices()">↻</button>
+          <button class="btn-sm" style="background:#2a6dd6;color:#fff" onclick="addDevice()">Add</button>
+        </div>
+      </div>
+      <div>
+        <div class="wl-sublabel">Remove Device</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <select class="wl-select" id="wlRemoveSelect">
+            <option>174c:2174#ASMedia Technology Inc. ASMT2307</option>
+          </select>
+          <button class="btn-sm" style="background:#d43838;color:#fff" onclick="removeDevice()">Remove</button>
+        </div>
+      </div>
+
+      <!-- Source groups (hidden, kept for JS compatibility) -->
+      <div id="sourceGroups" style="display:none"></div>
     </div>
 
     <!-- CENTER — Radar -->
-    <div id="radarContainer" style="flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:#f6f8fa;border-radius:14px;border:1px solid #d4dbe4;position:relative;overflow:hidden">
-      <div id="netFlashOuter" style="display:none;position:absolute;inset:0;border-radius:14px;border:2px solid #d43838;animation:netFlash .4s ease 2;pointer-events:none;z-index:20;box-shadow:inset 0 0 50px rgba(212,56,56,.08)"></div>
-      <div id="netFlashInner" style="display:none;position:absolute;inset:18%;border-radius:50%;border:2px solid #c89020;animation:netFlash .4s ease 2;pointer-events:none;z-index:20;box-shadow:inset 0 0 30px rgba(200,144,32,.06)"></div>
-      <div id="radarWrap" style="position:relative;border-radius:50%;overflow:hidden;flex-shrink:0">
-        <canvas id="radarCanvas" style="position:absolute;top:0;left:0"></canvas>
-        <div id="blipLayer" style="position:absolute;top:0;left:0;width:100%;height:100%"></div>
-        <!-- Open Claw -->
-        <div id="lobster" style="position:absolute;z-index:10;pointer-events:none">
-          <div id="lobsterShadow" style="position:absolute;bottom:-10%;left:18%;width:64%;height:18%;background:radial-gradient(ellipse,rgba(0,0,0,.3) 0%,transparent 70%);border-radius:50%;filter:blur(2px)"></div>
-          <img src="/static/images/openclaw.png" id="lobsterImg" style="width:100%;height:100%;filter:drop-shadow(2px 4px 6px rgba(0,0,0,.45));transition:transform .2s,filter .2s"/>
-          <div id="lobsterEatLabel" style="display:none;position:absolute;top:-14%;left:50%;transform:translateX(-50%);z-index:20">
-            <div style="font-size:12px;color:#2a9d5c;font-weight:600;font-family:'JetBrains Mono',monospace;animation:floatUp .8s ease-out forwards;white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,.6)">PROCESSED</div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:0;min-width:0">
+      <!-- Title bar -->
+      <div style="background:#f6f8fa;border-radius:14px 14px 0 0;border:1px solid #d4dbe4;border-bottom:none;padding:12px 20px;font-size:16px;font-weight:600;color:#1a8a6a;letter-spacing:.5px;flex-shrink:0">
+        ASRock Industrial Hardware Platform
+      </div>
+      <div id="radarContainer" style="flex:1;display:flex;align-items:center;justify-content:center;background:#f6f8fa;border-radius:0 0 14px 14px;border:1px solid #d4dbe4;border-top:none;position:relative;overflow:hidden">
+        <div id="netFlashOuter" style="display:none;position:absolute;inset:0;border-radius:0 0 14px 14px;border:2px solid #d43838;animation:netFlash .4s ease 2;pointer-events:none;z-index:20;box-shadow:inset 0 0 50px rgba(212,56,56,.08)"></div>
+        <div id="netFlashInner" style="display:none;position:absolute;inset:18%;border-radius:50%;border:2px solid #c89020;animation:netFlash .4s ease 2;pointer-events:none;z-index:20;box-shadow:inset 0 0 30px rgba(200,144,32,.06)"></div>
+        <div id="radarWrap" style="position:relative;border-radius:50%;overflow:hidden;flex-shrink:0">
+          <canvas id="radarCanvas" style="position:absolute;top:0;left:0"></canvas>
+          <div id="blipLayer" style="position:absolute;top:0;left:0;width:100%;height:100%"></div>
+          <!-- Open Claw -->
+          <div id="lobster" style="position:absolute;z-index:10;pointer-events:none">
+            <div id="lobsterShadow" style="position:absolute;bottom:-10%;left:18%;width:64%;height:18%;background:radial-gradient(ellipse,rgba(0,0,0,.3) 0%,transparent 70%);border-radius:50%;filter:blur(2px)"></div>
+            <img src="/static/images/openclaw.png" id="lobsterImg" style="width:100%;height:100%;filter:drop-shadow(2px 4px 6px rgba(0,0,0,.45));transition:transform .2s,filter .2s"/>
+            <div id="lobsterEatLabel" style="display:none;position:absolute;top:-14%;left:50%;transform:translateX(-50%);z-index:20">
+              <div style="font-size:12px;color:#2a9d5c;font-weight:600;font-family:'JetBrains Mono',monospace;animation:floatUp .8s ease-out forwards;white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,.6)">PROCESSED</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- RIGHT — User Prompt Chat -->
-    <div style="width:252px;min-width:200px;flex:1 1 0;background:#f6f8fa;border-radius:14px;border:1px solid #d4dbe4;padding:18px;display:flex;flex-direction:column;flex-shrink:0;overflow:hidden">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6dd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg>
-        <span style="font-size:15px;font-weight:600;color:#1a2a3a;letter-spacing:.3px">User Prompt</span>
-      </div>
-      <div id="chatMessages" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:12px;min-height:0">
-        <div id="chatPlaceholder" style="color:#8a96a6;font-size:13px;text-align:center;padding:24px">
-          Send a command to Open Claw...
+    <!-- RIGHT — User Prompt (Terminal Style) -->
+    <div style="width:400px;min-width:320px;flex-shrink:0;background:#f6f8fa;border-radius:14px;border:1px solid #d4dbe4;display:flex;flex-direction:column;overflow:hidden">
+      <!-- Header -->
+      <div style="padding:12px 18px;border-bottom:1px solid #d4dbe4;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:8px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6dd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg>
+          <span style="font-size:17px;font-weight:600;color:#1a2a3a;letter-spacing:.3px">User Prompt</span>
+          <div style="width:8px;height:8px;border-radius:50%;background:#d43838;animation:blipPulse 1s infinite;flex-shrink:0"></div>
         </div>
+        <div style="color:#8a96a6;font-size:14px;cursor:pointer">⚙</div>
       </div>
-      <div style="display:flex;gap:8px;align-items:flex-end">
+      <!-- Terminal body -->
+      <div id="chatMessages" style="flex:1;overflow-y:auto;padding:12px 16px;min-height:0">
+        <div id="chatPlaceholder" style="display:none"></div>
+        <!-- Terminal output rendered here -->
+      </div>
+      <!-- Demo buttons -->
+      <div style="padding:8px 16px;border-top:1px solid #d4dbe4;display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0">
+        <button class="demo-btn" style="border:1px solid #2a6dd633;color:#2a6dd6;background:#2a6dd608" onclick="demoAction('step')">▶ demo step 1</button>
+        <button class="demo-btn" style="border:1px solid #2a6dd633;color:#2a6dd6;background:#2a6dd608" onclick="demoAction('all')">▶ demo all</button>
+        <button class="demo-btn" style="border:1px solid #2a6dd633;color:#2a6dd6;background:#2a6dd608" onclick="demoAction('dry')">▶ demo dry-run</button>
+        <button class="demo-btn" style="border:1px solid #1a8a6a33;color:#1a8a6a;background:#1a8a6a08" onclick="demoAction('ai')">AI demo step 1</button>
+      </div>
+      <!-- Command input -->
+      <div style="padding:8px 16px 12px;display:flex;gap:8px;align-items:center;flex-shrink:0">
         <textarea id="promptInput" placeholder="Type a command..." rows="1"
-          style="flex:1;background:#edf1f5;border:1px solid #d4dbe4;border-radius:8px;padding:9px 12px;color:#2a3a4a;font-size:14px;font-family:'JetBrains Mono',monospace;resize:none;outline:none;max-height:60px"></textarea>
+          style="flex:1;background:#edf1f5;border:1px solid #d4dbe4;border-radius:8px;padding:10px 14px;color:#2a3a4a;font-size:13px;font-family:'JetBrains Mono',monospace;resize:none;outline:none;max-height:40px"></textarea>
         <button id="sendBtn" onclick="sendPrompt()" style="background:#2a6dd6;border:none;color:#fff;border-radius:8px;padding:9px 14px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;opacity:.4;flex-shrink:0">↵</button>
       </div>
     </div>
@@ -119,9 +197,12 @@
 
   <!-- ═══ BOTTOM EVENT LOG ═══ -->
   <div style="background:#f6f8fa;border-radius:12px;border:1px solid #d4dbe4;padding:12px 18px;flex-shrink:0">
-    <div style="font-size:14px;font-weight:600;color:#1a2a3a;margin-bottom:8px;display:flex;align-items:center;gap:8px;letter-spacing:.3px">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2a6dd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zM12 6v6l4 2"/></svg>
-      Event Log
+    <div style="font-size:16px;font-weight:600;color:#1a2a3a;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;letter-spacing:.3px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2a6dd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zM12 6v6l4 2"/></svg>
+        Event Log
+      </div>
+      <button onclick="clearEventLog()" style="background:transparent;border:1px solid #d4dbe4;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#8a96a6;font-family:'JetBrains Mono',monospace">Clear</button>
     </div>
     <div id="eventLog" style="display:flex;flex-direction:column;gap:3px;max-height:120px;overflow-y:auto">
       <div style="color:#8a96a6;font-size:13px;text-align:center;padding:12px">Awaiting events...</div>
@@ -205,13 +286,12 @@ socket.on('review_complete', (data) => { renderPendingPanel(); });
 
 // ─── Sizing ───
 function computeSize() {
-  radarSize = Math.min(window.innerHeight - 140, window.innerWidth - 560, 520);
+  radarSize = Math.min(window.innerHeight - 140, window.innerWidth - 900, 520);
   radarSize = Math.max(radarSize, 280);
   const wrap = document.getElementById('radarWrap');
   const cont = document.getElementById('radarContainer');
   const canvas = document.getElementById('radarCanvas');
   wrap.style.width = wrap.style.height = radarSize + 'px';
-  cont.style.width = (radarSize + 40) + 'px';
   canvas.style.width = canvas.style.height = radarSize + 'px';
   // Lobster size
   const lobSize = radarSize * 0.14;
@@ -238,15 +318,27 @@ function drawRadar() {
   bg.addColorStop(0,'#dce4ee'); bg.addColorStop(1,'#c8d4e2');
   ctx.fillStyle = bg; ctx.beginPath(); ctx.arc(cx,cy,s/2,0,Math.PI*2); ctx.fill();
 
+  // Floor — fills entire radar circle (drawn first so grid/rings appear on top)
+  const floorR=s/2;
+  ctx.save();ctx.beginPath();ctx.arc(cx,cy,floorR,0,Math.PI*2);ctx.clip();
+  const fl=ctx.createRadialGradient(cx,cy,0,cx,cy,floorR);
+  fl.addColorStop(0,'#f8f4ec');fl.addColorStop(.6,'#f0e8d8');fl.addColorStop(1,'#e4d8c0');
+  ctx.fillStyle=fl;ctx.fillRect(0,0,s,s);
+  ctx.strokeStyle='#d4bb9030';ctx.lineWidth=.5;
+  for(let gx=0;gx<s;gx+=12){
+    ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx+4,s);ctx.stroke();
+  }
+  ctx.restore();
+
   // Grid
-  ctx.strokeStyle='#00000008'; ctx.lineWidth=.5;
+  ctx.strokeStyle='#00000010'; ctx.lineWidth=.5;
   for(let i=-s/2;i<s/2;i+=28){
     ctx.beginPath();ctx.moveTo(cx+i,0);ctx.lineTo(cx+i,s);ctx.stroke();
     ctx.beginPath();ctx.moveTo(0,cy+i);ctx.lineTo(s,cy+i);ctx.stroke();
   }
 
-  // Defense rings
-  [[.84,T.ring1,'INTERCEPT'],[.6,T.ring2,'REVIEW'],[.36,T.ring3,'SAFE']].forEach(([r,color,label])=>{
+  // Defense rings — only red INTERCEPT ring
+  [[.84,T.ring1,'INTERCEPT']].forEach(([r,color,label])=>{
     ctx.beginPath();ctx.arc(cx,cy,s/2*r,0,Math.PI*2);ctx.strokeStyle=color+'88';ctx.lineWidth=5;ctx.stroke();
     ctx.beginPath();ctx.arc(cx,cy,s/2*r,0,Math.PI*2);ctx.strokeStyle=color+'30';ctx.lineWidth=12;ctx.stroke();
     for(let a=0;a<Math.PI*2;a+=Math.PI/16){
@@ -262,18 +354,6 @@ function drawRadar() {
   ctx.beginPath();ctx.moveTo(cx-s*.42,cy);ctx.lineTo(cx+s*.42,cy);ctx.stroke();
   ctx.setLineDash([]);
 
-  // Safe zone floor
-  const safeR=s*.55/2;
-  ctx.save();ctx.beginPath();ctx.arc(cx,cy,safeR+6,0,Math.PI*2);ctx.clip();
-  const fl=ctx.createRadialGradient(cx,cy,0,cx,cy,safeR+6);
-  fl.addColorStop(0,'#f8f4ec');fl.addColorStop(.6,'#f0e8d8');fl.addColorStop(1,'#e4d8c0');
-  ctx.fillStyle=fl;ctx.fillRect(cx-safeR-10,cy-safeR-10,(safeR+10)*2,(safeR+10)*2);
-  ctx.strokeStyle='#d4bb9030';ctx.lineWidth=.5;
-  for(let gx=cx-safeR-10;gx<cx+safeR+10;gx+=12){
-    ctx.beginPath();ctx.moveTo(gx,cy-safeR-10);ctx.lineTo(gx+4,cy+safeR+10);ctx.stroke();
-  }
-  ctx.restore();
-
   // Sweep
   sweepAngle += 1.5 * 0.015;
   const a = sweepAngle;
@@ -286,10 +366,8 @@ function drawRadar() {
   ctx.fillStyle=T.sweep;ctx.beginPath();ctx.arc(cx+Math.cos(a)*s/2*.84,cy+Math.sin(a)*s/2*.84,2.5,0,Math.PI*2);ctx.fill();
 
   // Zone labels
-  ctx.font='500 10px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.font='500 11px DM Sans,sans-serif';ctx.textAlign='center';
   ctx.fillStyle=T.ring1+'bb';ctx.fillText('INTERCEPT',cx,cy-s*.39);
-  ctx.fillStyle=T.ring2+'99';ctx.fillText('REVIEW',cx,cy-s*.26);
-  ctx.fillStyle=T.ring3+'99';ctx.fillText('SAFE',cx,cy-s*.13);
 
   requestAnimationFrame(drawRadar);
 }
@@ -297,7 +375,7 @@ function drawRadar() {
 // ─── Lobster Animation ───
 function animateLobster(){
   const s = radarSize;
-  const cx = s/2, cy = s/2 + s*0.08;
+  const cx = s/2, cy = s/2 + s*0.03;
   const radius = s*0.04;
   const size = s*0.14;
 
@@ -313,7 +391,7 @@ function animateLobster(){
 }
 
 function pickLobsterTarget(){
-  const radius = radarSize * 0.04;
+  const radius = radarSize * 0.18;
   const angle = Math.random()*Math.PI*2;
   const dist = Math.random()*radius;
   lobsterTarget = {x:Math.cos(angle)*dist, y:Math.sin(angle)*dist};
@@ -325,7 +403,7 @@ function addBlip(item){
   const angle = Math.random()*Math.PI*2;
   let startX, startY;
   if(item.source_type==='internal'){
-    const r=s*0.06; startX=cx+Math.cos(angle)*r; startY=cy+Math.sin(angle)*r+s*0.08;
+    const r=s*0.06; startX=cx+Math.cos(angle)*r; startY=cy+Math.sin(angle)*r+s*0.03;
   } else {
     const r=s*0.46; startX=cx+Math.cos(angle)*r; startY=cy+Math.sin(angle)*r;
   }
@@ -336,7 +414,7 @@ function addBlip(item){
   el.style.cssText = `position:absolute;left:${startX-5}px;top:${startY-5}px;width:10px;height:10px;border-radius:50%;background:${color};box-shadow:0 0 6px ${color}88;animation:blipPulse 2s ease-in-out infinite;z-index:5;transition:box-shadow .3s;`;
   // Label
   const lbl = document.createElement('div');
-  lbl.style.cssText = `position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:11px;color:${color};font-weight:600;white-space:nowrap;font-family:${T.mono};text-shadow:0 1px 4px ${T.bg0};letter-spacing:.3px`;
+  lbl.style.cssText = `position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:12px;color:${color};font-weight:600;white-space:nowrap;font-family:${T.mono};text-shadow:0 1px 4px ${T.bg0};letter-spacing:.3px`;
   lbl.textContent = item.label;
   el.appendChild(lbl);
 
@@ -422,27 +500,37 @@ function renderStats(){
   row.innerHTML = items.map((s,i) => `
     <div class="stat-card ${s.click?'clickable':''}" style="border:1px solid ${s.color}15;cursor:${s.click?'pointer':'default'}"
       ${s.click?'onclick="openPendingPanel()"':''}>
-      <div style="font-size:20px;font-weight:700;color:${s.color};font-family:${T.mono}">${s.value}</div>
-      <div style="font-size:11px;color:#8a96a6;margin-top:3px;text-transform:uppercase;letter-spacing:.8px">${s.label}</div>
-      ${s.click && s.value>0 ? `<div style="font-size:10px;color:${s.color};margin-top:4px;font-weight:600;letter-spacing:.5px">REVIEW →</div>` : ''}
+      <div style="font-size:26px;font-weight:700;color:${s.color};font-family:${T.mono}">${s.value}</div>
+      <div style="font-size:12px;color:#8a96a6;margin-top:3px;text-transform:uppercase;letter-spacing:.8px">${s.label}</div>
+      ${s.click && s.value>0 ? `<div style="font-size:11px;color:${s.color};margin-top:4px;font-weight:600;letter-spacing:.5px">REVIEW →</div>` : ''}
     </div>
   `).join('');
+
+  // Update sandbox stats from live data
+  updateSandboxStats();
+}
+
+function updateSandboxStats(){
+  // Derive sandbox counts from stats
+  const total = stats.passed + stats.blocked + stats.reviewing;
+  const el = document.getElementById('sbTotal');
+  if(el) el.textContent = total || 3;
 }
 
 function renderEvents(){
   const log = document.getElementById('eventLog');
   if(events.length===0){
-    log.innerHTML='<div style="color:#8a96a6;font-size:13px;text-align:center;padding:12px">Awaiting events...</div>';
+    log.innerHTML='<div style="color:#8a96a6;font-size:14px;text-align:center;padding:12px">Awaiting events...</div>';
     return;
   }
   log.innerHTML = events.slice(0,30).map((ev,i) => {
     const rc = ev.result==='passed'?T.trusted:ev.result==='blocked'?T.blocked:T.watch;
     const rl = ev.result==='passed'?'PASSED':ev.result==='blocked'?'BLOCKED':'PENDING';
     return `<div class="log-row" style="background:${i===0?(T[ev.type]||T.normal)+'06':'transparent'};border-left:2px solid ${T[ev.type]||T.textMuted};${i===0?'animation:fadeIn .3s':''}">
-      <span style="color:#8a96a6;min-width:60px;font-size:11px">${ev.time}</span>
-      <span style="color:${T[ev.type]||T.normal};font-weight:600;min-width:65px;font-size:11px">${(ev.type||'').toUpperCase()}</span>
-      <span style="color:#5a6a7a;flex:1;font-size:11px">${ev.message}</span>
-      <span style="color:${rc};font-weight:600;font-size:11px">${rl}</span>
+      <span style="color:#8a96a6;min-width:65px;font-size:13px">${ev.time}</span>
+      <span style="color:${T[ev.type]||T.normal};font-weight:600;min-width:70px;font-size:13px">${(ev.type||'').toUpperCase()}</span>
+      <span style="color:#5a6a7a;flex:1;font-size:13px">${ev.message}</span>
+      <span style="color:${rc};font-weight:600;font-size:13px">${rl}</span>
     </div>`;
   }).join('');
 }
@@ -451,29 +539,41 @@ function renderChat(){
   const container = document.getElementById('chatMessages');
   const placeholder = document.getElementById('chatPlaceholder');
   if(chatMessages.length===0){
-    if(placeholder) placeholder.style.display='block';
+    if(placeholder) placeholder.style.display='none';
+    // Show default terminal content
+    container.innerHTML = `
+      <div class="term-line"><span class="cmd">sudo crontab</span></div>
+      <div class="term-line"><span class="ok">[OK]</span> Running as root – sudo check skipped</div>
+      <div class="term-line"><span class="warn">[WARN]</span> Running as root. Some detection rules (e.g., Open sensitive file)</div>
+      <div class="term-line"><span class="warn">[WARN]</span> may not trigger when commands are executed directly as root.</div>
+      <div class="term-line"><span class="warn">[WARN]</span> For best results, run this script as a regular user.</div>
+      <div class="term-line" style="margin-top:8px"><span class="info">Step mode plan:</span></div>
+      <div class="term-line"> Step 1: LOG (observe only)</div>
+      <div class="term-line"> Step 2: LOG (observe only)</div>
+      <div class="term-line"> Step 3: LOG (observe only)</div>
+      <div class="term-line"> Step 4: LOG (observe only)</div>
+      <div class="term-line"> Step 5: LOG (observe only)</div>
+      <div class="term-line"> Step 6: LOG (observe only)</div>
+      <div class="term-line"> Step 7: LOG (observe only)</div>
+      <div class="term-line"> Step 8: LOG (observe only)</div>
+      <div class="term-line" style="margin-top:8px">All prerequisites passed. Starting demo...</div>
+      <div class="term-line"><span class="term-cursor"></span></div>
+    `;
     return;
   }
   if(placeholder) placeholder.style.display='none';
 
-  // Only add new messages
-  while(container.children.length > chatMessages.length){
-    container.removeChild(container.lastChild);
-  }
-
-  // Rebuild all for simplicity
+  // Render messages as terminal lines
   container.innerHTML = chatMessages.map((msg,i) => {
     const isUser = msg.role==='user';
-    const statusColor = msg.status==='blocked'?T.blocked:msg.status==='passed'?T.trusted:T.watch;
-    const statusLabel = msg.status==='blocked'?'⊘ INTERCEPTED':msg.status==='passed'?'✓ EXECUTED':'⚠ PENDING REVIEW';
-    return `<div style="display:flex;flex-direction:column;align-items:${isUser?'flex-end':'flex-start'};animation:fadeIn .2s">
-      <div style="font-size:11px;color:#8a96a6;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">${isUser?'You':'Open Claw'}</div>
-      <div class="chat-msg" style="font-family:${isUser?T.sans:T.mono};background:${isUser?T.accent+'20':T.bg2};border:1px solid ${isUser?T.accent+'33':T.border};color:${isUser?T.text:(msg.status==='blocked'?T.blocked:msg.status==='passed'?T.trusted:T.text)}">
-        ${escHtml(msg.text)}
-        ${msg.status?`<div style="margin-top:4px;font-size:11px;font-weight:600;font-family:${T.mono};color:${statusColor}">${statusLabel}</div>`:''}
-      </div>
-    </div>`;
-  }).join('');
+    if(isUser){
+      return `<div class="term-line" style="margin-top:4px"><span class="cmd">$ ${escHtml(msg.text)}</span></div>`;
+    } else {
+      const statusColor = msg.status==='blocked'?T.blocked:msg.status==='passed'?T.trusted:T.watch;
+      const statusTag = msg.status==='blocked'?'[BLOCKED]':msg.status==='passed'?'[OK]':'[PENDING]';
+      return `<div class="term-line"><span style="color:${statusColor};font-weight:600">${statusTag}</span> ${escHtml(msg.text)}</div>`;
+    }
+  }).join('') + '<div class="term-line"><span class="term-cursor"></span></div>';
 
   container.scrollTop = container.scrollHeight;
 }
@@ -481,35 +581,7 @@ function renderChat(){
 function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 function renderSourceGroups(){
-  const groups = [
-    {name:'Agent Output',icon:'zap',items:[
-      {name:'Code Execution',status:'watch'},{name:'File Access',status:'trusted'},
-      {name:'Network Request',status:'honeypot'},{name:'System Call',status:'blocked'},
-    ]},
-    {name:'Human Input',icon:'server',items:[
-      {name:'User Prompt',status:'trusted'},{name:'MCP Tool Call',status:'watch'},
-      {name:'Plugin Request',status:'honeypot'},{name:'Third-party Agent',status:'blocked'},
-    ]},
-  ];
-  const el = document.getElementById('sourceGroups');
-  el.innerHTML = groups.map((g,gi) => `
-    <div style="margin-bottom:14px">
-      <div style="font-size:12px;color:#8a96a6;margin-bottom:8px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.8px;font-weight:600">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8a96a6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="${gi===0?'M13 2L3 14h9l-1 10 10-12h-9l1-10z':'M2 2h20v8H2zM2 14h20v8H2zM6 6h.01M6 18h.01'}"/>
-        </svg>
-        ${g.name}
-      </div>
-      <div style="display:flex;flex-direction:column;gap:3px">
-        ${g.items.map(it=>`
-          <div class="source-item">
-            <span style="color:#2a3a4a">${it.name}</span>
-            <span class="badge" style="background:${T[it.status]}15;color:${T[it.status]}">${it.status.toUpperCase()}</span>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `).join('');
+  // Kept for compatibility but hidden in new layout
 }
 
 function renderFeedButtons(){
@@ -599,6 +671,37 @@ function sendPrompt(){
   });
 }
 
+function demoAction(type){
+  const msgs = {
+    step: 'demo step 1',
+    all: 'demo all',
+    dry: 'demo dry-run',
+    ai: 'ai demo step 1'
+  };
+  const input = document.getElementById('promptInput');
+  input.value = msgs[type] || '';
+  document.getElementById('sendBtn').style.opacity = '1';
+  sendPrompt();
+}
+
+function clearEventLog(){
+  events = [];
+  renderEvents();
+}
+
+function refreshDevices(){
+  // Placeholder for device refresh
+  console.log('Refreshing device list...');
+}
+function addDevice(){
+  const sel = document.getElementById('wlAddSelect');
+  if(sel.value) console.log('Adding device:', sel.value);
+}
+function removeDevice(){
+  const sel = document.getElementById('wlRemoveSelect');
+  console.log('Removing device:', sel.value);
+}
+
 // ─── Auto Feed ───
 function startAutoFeed(){
   if(autoFeedTimer) clearInterval(autoFeedTimer);
@@ -625,6 +728,7 @@ computeSize();
 renderFeedButtons();
 renderStats();
 renderEvents();
+renderChat();
 renderSourceGroups();
 drawRadar();
 animateLobster();
